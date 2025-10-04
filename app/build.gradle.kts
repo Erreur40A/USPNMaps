@@ -37,10 +37,19 @@ android {
     buildFeatures {
         compose = true
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.3"
+    }
 }
 
 dependencies {
 
+    implementation(platform(libs.androidx.compose.bom.v20240200))
+    implementation(libs.ui)
+    implementation(libs.material3)
+    implementation(libs.ui.tooling.preview)
+    implementation(libs.androidx.activity.compose.v182)
+    implementation(libs.osmdroid.android)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -49,6 +58,12 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.osmdroid.android)
+    implementation(libs.androidx.core.ktx.v1120)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.androidx.runtime)
+    implementation(libs.androidx.work.runtime.ktx)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

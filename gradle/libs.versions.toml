@@ -1,5 +1,10 @@
 [versions]
-agp = "8.13.0"
+activityComposeVersion = "1.8.2"
+agp = "8.7.3"
+appcompat = "1.7.1"
+composeBomVersion = "2024.02.00"
+constraintlayout = "2.2.1"
+coreKtxVersion = "1.12.0"
 kotlin = "2.0.21"
 coreKtx = "1.10.1"
 junit = "4.13.2"
@@ -8,9 +13,19 @@ espressoCore = "3.6.1"
 lifecycleRuntimeKtx = "2.6.1"
 activityCompose = "1.10.1"
 composeBom = "2024.09.00"
+material = "1.13.0"
+osmdroidAndroid = "6.1.18"
+runtime = "1.0.0-alpha06"
+maps = "3.1.0-beta"
+workRuntimeKtx = "2.10.5"
 
 [libraries]
+androidx-activity-compose-v182 = { module = "androidx.activity:activity-compose", version.ref = "activityComposeVersion" }
+androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
+androidx-compose-bom-v20240200 = { module = "androidx.compose:compose-bom", version.ref = "composeBomVersion" }
+androidx-constraintlayout = { module = "androidx.constraintlayout:constraintlayout", version.ref = "constraintlayout" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
+androidx-core-ktx-v1120 = { module = "androidx.core:core-ktx", version.ref = "coreKtxVersion" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-junit = { group = "androidx.test.ext", name = "junit", version.ref = "junitVersion" }
 androidx-espresso-core = { group = "androidx.test.espresso", name = "espresso-core", version.ref = "espressoCore" }
@@ -24,6 +39,12 @@ androidx-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-toolin
 androidx-ui-test-manifest = { group = "androidx.compose.ui", name = "ui-test-manifest" }
 androidx-ui-test-junit4 = { group = "androidx.compose.ui", name = "ui-test-junit4" }
 androidx-material3 = { group = "androidx.compose.material3", name = "material3" }
+material3 = { module = "androidx.compose.material3:material3" }
+osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroidAndroid" }
+ui = { module = "androidx.compose.ui:ui" }
+ui-tooling-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
+androidx-runtime = { group = "androidx.xr.runtime", name = "runtime", version.ref = "runtime" }
+androidx-work-runtime-ktx = { group = "androidx.work", name = "work-runtime-ktx", version.ref = "workRuntimeKtx" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
