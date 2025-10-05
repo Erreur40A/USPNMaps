@@ -1,47 +1,70 @@
 package com.uspn.maps
 
 import android.os.Bundle
+import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.uspn.maps.ui.theme.USPNMapsTheme
+import org.osmdroid.config.Configuration
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import org.osmdroid.events.MapListener
+import org.osmdroid.views.overlay.Polygon
 
 class MainActivity : ComponentActivity() {
+    private  lateinit var map : UnivMapView
+    val centreFac = GeoPoint(48.95713, 2.34127)
+
+    val coordUniv = listOf(
+        GeoPoint(48.96000, 2.33700),
+        GeoPoint(48.96000, 2.34600),
+        GeoPoint(48.95400, 2.34600),
+        GeoPoint(48.95400, 2.33700)
+    )
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            USPNMapsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
-                }
-            }
+
+        Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", MODE_PRIVATE))
+
+        map = UnivMapView(this).apply {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(true)
+            minZoomLevel = 17.0
+            maxZoomLevel = 21.0
         }
-    }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+        val layout = FrameLayout(this)
+        layout.addView(map, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        ))
+        setContentView(layout)
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    USPNMapsTheme {
-        Greeting("Android")
+        val polygon = Polygon(map).apply {
+            points = coordUniv
+
+            outlinePaint.color = 0x6FFF0000
+            outlinePaint.strokeWidth = 10f
+            outlinePaint.style = android.graphics.Paint.Style.STROKE
+        }
+
+        map.overlays.add(polygon)
+        map.setPolygon(polygon)
+
+        map.centreFac = centreFac
+        map.controller.setZoom(17.0)
+        map.controller.setCenter(centreFac)
+
+        map.addMapListener (object : MapListener {
+            override fun onScroll(event: ScrollEvent?): Boolean {
+                map.centrage(map.zoomLevelDouble)
+                return true
+            }
+
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                return true
+            }
+        })
     }
 }
