@@ -1,8 +1,15 @@
 package com.uspn.maps
 
+import android.graphics.Color
 import android.os.Bundle
+import android.view.Gravity
+import android.widget.EditText
 import android.widget.FrameLayout
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import androidx.activity.ComponentActivity
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
 import org.osmdroid.config.Configuration
 import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
@@ -39,6 +46,47 @@ class MainActivity : ComponentActivity() {
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.MATCH_PARENT
         ))
+
+        val searchLayout = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            setPadding(16, 16, 16, 16)
+            setBackgroundColor(Color.WHITE)
+            elevation = 8f
+        }
+
+        ViewCompat.setOnApplyWindowInsetsListener(searchLayout) { view, insets ->
+            val statusBarInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars())
+            view.setPadding(
+                view.paddingLeft,
+                statusBarInsets.top + 16,
+                view.paddingRight,
+                view.paddingBottom
+            )
+            insets
+        }
+
+        val searchBar = EditText(this).apply {
+            hint = "Rechercher une salle..."
+            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
+            inputType = android.text.InputType.TYPE_CLASS_TEXT
+        }
+
+        val searchButton = ImageButton(this).apply {
+            setImageResource(android.R.drawable.ic_menu_search)
+            setBackgroundColor(Color.TRANSPARENT)
+        }
+
+        searchLayout.addView(searchBar)
+        searchLayout.addView(searchButton)
+
+        val searchParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.TOP
+        }
+
+        layout.addView(searchLayout, searchParams)
         setContentView(layout)
 
         val polygon = Polygon(map).apply {
