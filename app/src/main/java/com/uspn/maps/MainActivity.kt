@@ -1,12 +1,14 @@
 package com.uspn.maps
 
 import android.graphics.Color
+import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
@@ -17,6 +19,7 @@ import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.events.MapListener
 import org.osmdroid.views.overlay.Polygon
+import androidx.core.graphics.toColorInt
 
 class MainActivity : ComponentActivity() {
     private  lateinit var map : UnivMapView
@@ -65,11 +68,19 @@ class MainActivity : ComponentActivity() {
             insets
         }
 
+        val backgroundSearchBar = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            cornerRadius = 64f
+            setColor("#FFFFFF".toColorInt())
+        }
+
         val searchBar = EditText(this).apply {
             hint = "Rechercher une salle..."
             layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
             inputType = android.text.InputType.TYPE_CLASS_TEXT
         }
+        searchBar.setPadding(8, searchBar.paddingTop, searchBar.paddingLeft, searchBar.paddingBottom)
+        searchBar.background = backgroundSearchBar
 
         val searchButton = ImageButton(this).apply {
             setImageResource(android.R.drawable.ic_menu_search)
@@ -86,15 +97,20 @@ class MainActivity : ComponentActivity() {
             gravity = Gravity.TOP
         }
 
+        val backgroundSearchLayout = GradientDrawable().apply {
+            shape = GradientDrawable.RECTANGLE
+            setColor("#293358".toColorInt())
+        }
+        searchLayout.background = backgroundSearchLayout
+
         layout.addView(searchLayout, searchParams)
         setContentView(layout)
 
         val polygon = Polygon(map).apply {
             points = coordUniv
 
-            outlinePaint.color = 0x6FFF0000
-            outlinePaint.strokeWidth = 0f
-            outlinePaint.style = android.graphics.Paint.Style.STROKE
+            outlinePaint.color = Color.TRANSPARENT
+            fillPaint.color = Color.TRANSPARENT
         }
 
         map.overlays.add(polygon)
