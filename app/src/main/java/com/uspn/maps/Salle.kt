@@ -7,6 +7,5 @@ data class Salle(
     val nom_salle: String,
     val etage: String,
     val description: String,
-    val longitude: Float,
-    val latitude: Float
+    val coord: GeoPoint
 )
