@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">USPN Maps</string>
+    <string name="credits_openstreetmap">© Les contributeurs OpenStreetMap</string>
 </resources>

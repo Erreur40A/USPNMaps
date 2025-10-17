@@ -1,13 +1,16 @@
 package com.uspn.maps
 
+import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
+import android.net.Uri
 import android.os.Bundle
 import android.view.Gravity
 import android.widget.EditText
 import android.widget.FrameLayout
 import android.widget.ImageButton
 import android.widget.LinearLayout
+import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.core.view.ViewCompat
@@ -20,6 +23,7 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.events.MapListener
 import org.osmdroid.views.overlay.Polygon
 import androidx.core.graphics.toColorInt
+import androidx.core.net.toUri
 
 class MainActivity : ComponentActivity() {
     private  lateinit var map : UnivMapView
@@ -103,7 +107,33 @@ class MainActivity : ComponentActivity() {
         }
         searchLayout.background = backgroundSearchLayout
 
+        val osmCredit = TextView(this).apply {
+            text = context.getString(R.string.credits_openstreetmap)
+            textSize = 12f
+            setTextColor(0xFFFFFFFF.toInt())
+            setPadding(12, 8, 12, 8)
+            setBackgroundColor(0x66000000)
+            contentDescription = "Crédit : les contributeurs OpenStreetMap"
+
+            setOnClickListener {
+                val url = "https://www.openstreetmap.org/copyright"
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                context.startActivity(intent)
+            }
+        }
+
+        val creditParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.END
+            marginEnd = 16
+            bottomMargin = 16
+        }
+
         layout.addView(searchLayout, searchParams)
+        layout.addView(osmCredit, creditParams)
+
         setContentView(layout)
 
         val polygon = Polygon(map).apply {
