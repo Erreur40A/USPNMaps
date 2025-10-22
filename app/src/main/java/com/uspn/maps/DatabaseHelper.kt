@@ -19,12 +19,16 @@ class DatabaseHelper(context: Context) :
 
         cursor.use {
             while (it.moveToNext()) {
-                val longitude = it.getFloat(it.getColumnIndexOrThrow("longitude"))
-                val latitude = it.getFloat(it.getColumnIndexOrThrow("latitude"))
+                val longitude = it.getDouble(it.getColumnIndexOrThrow("longitude"))
+                val latitude = it.getDouble(it.getColumnIndexOrThrow("latitude"))
                 val data = Salle(
                     id = it.getInt(it.getColumnIndexOrThrow("id")),
-                    nom_salle = it.getString(it.getColumnIndexOrThrow("nom_salle")),
+                    code = it.getString(it.getColumnIndexOrThrow("code")),
+                    composante = it.getString(it.getColumnIndexOrThrow("composante")),
+                    cheminPhoto = it.getString(it.getColumnIndexOrThrow("chemin_photo")),
+                    nomSalle = it.getString(it.getColumnIndexOrThrow("nom_salle")),
                     etage = it.getString(it.getColumnIndexOrThrow("etage")),
+                    batiment = it.getString(it.getColumnIndexOrThrow("batiment")),
                     description = it.getString(it.getColumnIndexOrThrow("description")),
                     coord = GeoPoint(latitude, longitude)
                 )

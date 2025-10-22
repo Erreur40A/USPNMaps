@@ -3,6 +3,8 @@ package com.uspn.maps
 import android.graphics.Color
 import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
+import android.provider.ContactsContract.Data
+import android.util.Log
 import android.view.Gravity
 import android.widget.EditText
 import android.widget.FrameLayout
@@ -20,11 +22,15 @@ import org.osmdroid.util.GeoPoint
 import org.osmdroid.events.MapListener
 import org.osmdroid.views.overlay.Polygon
 import androidx.core.graphics.toColorInt
+import com.uspn.maps.ui.theme.SearchManager
 
 class MainActivity : ComponentActivity() {
     private  lateinit var map : UnivMapView
-    val centreFac = GeoPoint(48.95713, 2.34127)
+    private lateinit var dbHelper: DatabaseHelper
+    private lateinit var searchManager: SearchManager
 
+    /// Coordonnees de la fac
+    val centreFac = GeoPoint(48.95713, 2.34127)
     val coordUniv = listOf(
         GeoPoint(48.96000, 2.33700),
         GeoPoint(48.96000, 2.34600),
@@ -32,10 +38,15 @@ class MainActivity : ComponentActivity() {
         GeoPoint(48.95400, 2.33700)
     )
 
+    ///fonction qui s'execute lorsqu'on lance l'apk
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
+        // initialisations ici db, map, etc
         Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", MODE_PRIVATE))
+
+        dbHelper = DatabaseHelper(this)
+        searchManager = SearchManager(this, dbHelper)
 
         map = UnivMapView(this).apply {
             setTileSource(TileSourceFactory.MAPNIK)
@@ -50,58 +61,15 @@ class MainActivity : ComponentActivity() {
             FrameLayout.LayoutParams.MATCH_PARENT
         ))
 
-        val searchLayout = LinearLayout(this).apply {
-            orientation = LinearLayout.HORIZONTAL
-            setPadding(16, 16, 16, 16)
-            setBackgroundColor(Color.WHITE)
-            elevation = 8f
-        }
 
-        ViewCompat.setOnApplyWindowInsetsListener(searchLayout) { view, insets ->
-            val statusBarInsets = insets.getInsets(WindowInsetsCompat.Type.statusBars())
-            view.setPadding(
-                view.paddingLeft,
-                statusBarInsets.top + 16,
-                view.paddingRight,
-                view.paddingBottom
-            )
-            insets
-        }
-
-        val backgroundSearchBar = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            cornerRadius = 64f
-            setColor("#FFFFFF".toColorInt())
-        }
-
-        val searchBar = EditText(this).apply {
-            hint = "Rechercher une salle..."
-            layoutParams = LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f)
-            inputType = android.text.InputType.TYPE_CLASS_TEXT
-        }
-        searchBar.setPadding(8, searchBar.paddingTop, searchBar.paddingLeft, searchBar.paddingBottom)
-        searchBar.background = backgroundSearchBar
-
-        val searchButton = ImageButton(this).apply {
-            setImageResource(android.R.drawable.ic_menu_search)
-            setBackgroundColor(Color.TRANSPARENT)
-        }
-
-        searchLayout.addView(searchBar)
-        searchLayout.addView(searchButton)
-
+        // Ajout de la barre de recherche
+        val searchLayout = searchManager.createSearchLayout()
         val searchParams = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.MATCH_PARENT,
             FrameLayout.LayoutParams.WRAP_CONTENT
         ).apply {
             gravity = Gravity.TOP
         }
-
-        val backgroundSearchLayout = GradientDrawable().apply {
-            shape = GradientDrawable.RECTANGLE
-            setColor("#293358".toColorInt())
-        }
-        searchLayout.background = backgroundSearchLayout
 
         layout.addView(searchLayout, searchParams)
         setContentView(layout)
@@ -134,5 +102,9 @@ class MainActivity : ComponentActivity() {
                 return true
             }
         })
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        dbHelper.close()
     }
 }
