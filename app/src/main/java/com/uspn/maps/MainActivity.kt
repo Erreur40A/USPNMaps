@@ -93,7 +93,7 @@ class MainActivity : ComponentActivity() {
             points = coordUniv
 
             outlinePaint.color = 0x6FFF0000
-            outlinePaint.strokeWidth = 0f
+            outlinePaint.strokeWidth = 0.0f
             outlinePaint.style = android.graphics.Paint.Style.STROKE
         }
 
