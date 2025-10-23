@@ -21,6 +21,7 @@ class SearchManager(
 ) {
     private var allSalles: List<Salle> = emptyList()
     private var selectedSalle: Salle? = null
+    var onSalleSelected: ((Salle) -> Unit)? = null
 
     init {
         allSalles = dbHelper.getAllData()
@@ -63,7 +64,7 @@ class SearchManager(
 
             setAdapter(salleAdapter)
 
-            // ✅ Quand l'utilisateur sélectionne une salle
+            // Quand l'utilisateur sélectionne une salle
             setOnItemClickListener { parent, view, position, id ->
                 val salle = salleAdapter.getItem(position)
                 if (salle != null) {
@@ -125,17 +126,8 @@ class SearchManager(
 
     // Quand une salle est sélectionnée
     private fun handleSalleSelection(salle: Salle) {
-        Log.d("SearchManager", "Salle sélectionnée: ${salle.nomSalle}")
-        println("=== SALLE SÉLECTIONNÉE ===")
-        println("ID: ${salle.id}")
-        println("Nom: ${salle.nomSalle}")
-        println("Code: ${salle.code}")
-        println("Bâtiment: ${salle.batiment}")
-        println("Étage: ${salle.etage}")
-        println("Composante: ${salle.composante}")
-        println("Coordonnées: ${salle.coord}")
-        println("========================")
-
+        Log.d("SearchManager", "Salle sélectionnée: ${salle.toString()}")
+        onSalleSelected?.invoke(salle)
         Toast.makeText(
             context,
             "Salle: ${salle.nomSalle}\nBâtiment: ${salle.batiment}",
@@ -143,7 +135,7 @@ class SearchManager(
         ).show()
     }
 
-    // 🪟 Afficher les résultats de recherche (dialogue)
+    // Afficher les résultats de recherche (dialogue)
     private fun showSearchResults(results: List<Salle>) {
         if (results.isEmpty()) {
             Toast.makeText(context, "Aucune salle trouvée", Toast.LENGTH_SHORT).show()

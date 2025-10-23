@@ -71,13 +71,20 @@ class MainActivity : ComponentActivity() {
             gravity = Gravity.TOP
         }
 
+        // executer lorsqu'une salle est selectionnee
+        // on doit afficher le pin
+        searchManager.onSalleSelected = { salle ->
+            Log.d("MainActivity", "Salle choisie: ${salle.nomSalle}")
+            map.showSalleMarker(salle)
+        }
+
         layout.addView(searchLayout, searchParams)
         setContentView(layout)
 
         val polygon = Polygon(map).apply {
             points = coordUniv
 
-//            outlinePaint.color = 0x6FFF0000
+            //  outlinePaint.color = 0x6FFF0000
             outlinePaint.strokeWidth = 0.0f
             outlinePaint.style = android.graphics.Paint.Style.STROKE
             outlinePaint.color = Color.TRANSPARENT
