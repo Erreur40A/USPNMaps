@@ -23,6 +23,10 @@ import org.osmdroid.events.MapListener
 import org.osmdroid.views.overlay.Polygon
 import androidx.core.graphics.toColorInt
 import com.uspn.maps.ui.theme.SearchManager
+import org.osmdroid.events.MapEventsReceiver
+import org.osmdroid.views.overlay.MapEventsOverlay
+import org.osmdroid.views.overlay.Marker
+import org.osmdroid.views.overlay.infowindow.InfoWindow
 
 class MainActivity : ComponentActivity() {
     private  lateinit var map : UnivMapView
@@ -109,6 +113,18 @@ class MainActivity : ComponentActivity() {
                 return true
             }
         })
+
+        val mapEventsReceiver = object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+                InfoWindow.closeAllInfoWindowsOn(map)
+                return true
+            }
+
+            override fun longPressHelper(p: GeoPoint?): Boolean {
+                return false
+            }
+        }
+        map.overlays.add(MapEventsOverlay(mapEventsReceiver))
     }
     override fun onDestroy() {
         super.onDestroy()
