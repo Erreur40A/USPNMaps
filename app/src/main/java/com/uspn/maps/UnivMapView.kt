@@ -17,11 +17,13 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
+import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
+import org.osmdroid.views.overlay.Polyline
+import java.net.URL
 
 class UnivMapView @JvmOverloads constructor (
     context : Context,
@@ -240,6 +242,44 @@ class UnivMapView @JvmOverloads constructor (
         }
 
         dialog.show()
+    }
+
+    fun createOSRMRoute(salle: Salle, locationUser: GeoPoint?, map: MapView) {
+        if(locationUser == null){
+            return
+        }
+
+        val url = "https://router.project-osrm.org/route/v1/foot/${locationUser?.longitude},${locationUser?.latitude};${salle.coord.longitude},${salle.coord.latitude}?overview=full&geometries=geojson"
+
+        Thread {
+            try {
+                val json = URL(url).readText()
+                val coords = JSONObject(json)
+                    .getJSONArray("routes")
+                    .getJSONObject(0)
+                    .getJSONObject("geometry")
+                    .getJSONArray("coordinates")
+
+                val roadPoints = ArrayList<GeoPoint>()
+                for (i in 0 until coords.length()) {
+                    val point = coords.getJSONArray(i)
+                    roadPoints.add(GeoPoint(point.getDouble(1), point.getDouble(0)))
+                }
+
+                map.post {
+                    val line = Polyline().apply {
+                        setPoints(roadPoints)
+                        outlinePaint.color = Color.BLUE
+                        outlinePaint.strokeWidth = 5f
+                    }
+                    map.overlays.add(line)
+                    map.invalidate()
+                }
+
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }.start()
     }
 
 }
