@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.graphics.Color
 import android.util.AttributeSet
+import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.Window
@@ -17,6 +18,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.graphics.toColorInt
 import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -36,6 +38,9 @@ class UnivMapView @JvmOverloads constructor (
 
     private val handler = Handler(Looper.getMainLooper())
     private var polygon: Polygon? = null
+
+    // Configuration du serveur OSRM local
+    private val osrmServerUrl = "http://192.168.0.24:8000"
 
     fun Polygon.containsPoint(point: GeoPoint): Boolean {
         val pts = this.actualPoints
@@ -89,7 +94,7 @@ class UnivMapView @JvmOverloads constructor (
     fun showSalleMarker(salle: Salle) {
         val point = GeoPoint(salle.coord.latitude, salle.coord.longitude)
 
-        // Supprimer le marqueur précédent s’il existe
+        // Supprimer le marqueur précédent s'il existe
         currentMarker?.let { overlays.remove(it) }
 
         // Créer le nouveau marqueur
@@ -101,9 +106,8 @@ class UnivMapView @JvmOverloads constructor (
             isDraggable = false
 
             // Action au clic : afficher les infos
-            setOnMarkerClickListener { m, _ ->
+            setOnMarkerClickListener { _, _ ->
                 showSalleInfoDialog(salle)
-                //Toast.makeText(context, "${salle.nomSalle} (${salle.batiment})", Toast.LENGTH_SHORT).show()
                 true
             }
         }
@@ -119,7 +123,6 @@ class UnivMapView @JvmOverloads constructor (
 
 
     @SuppressLint("SetTextI18n")
-    // a ameliorer
     fun showSalleInfoDialog(salle: Salle) {
         val dialog = android.app.Dialog(context)
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
@@ -153,7 +156,7 @@ class UnivMapView @JvmOverloads constructor (
                 try {
                     val bitmap = BitmapFactory.decodeFile(salle.cheminPhoto)
                     setImageBitmap(bitmap)
-                } catch (e: Exception) {
+                } catch (_: Exception) {
                     setImageResource(android.R.drawable.ic_menu_report_image)
                 }
             } else {
@@ -207,7 +210,7 @@ class UnivMapView @JvmOverloads constructor (
             setTextColor(Color.WHITE)
             background = GradientDrawable().apply {
                 cornerRadius = 48f
-                setColor(Color.parseColor("#293358"))
+                setColor("#293358".toColorInt())
             }
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -249,7 +252,8 @@ class UnivMapView @JvmOverloads constructor (
             return
         }
 
-        val url = "https://router.project-osrm.org/route/v1/foot/${locationUser?.longitude},${locationUser?.latitude};${salle.coord.longitude},${salle.coord.latitude}?overview=full&geometries=geojson"
+        // Utilisation du serveur OSRM local sur campus.osm.pbf
+        val url = "$osrmServerUrl/route/v1/foot/${locationUser.longitude},${locationUser.latitude};${salle.coord.longitude},${salle.coord.latitude}?overview=full&geometries=geojson"
 
         Thread {
             try {
@@ -278,6 +282,8 @@ class UnivMapView @JvmOverloads constructor (
 
             } catch (e: Exception) {
                 e.printStackTrace()
+                // Log l'erreur pour le débogage
+                Log.e("OSRM", "Erreur de routage: ${e.message}")
             }
         }.start()
     }
