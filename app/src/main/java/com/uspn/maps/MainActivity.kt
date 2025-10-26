@@ -37,7 +37,6 @@ class MainActivity : ComponentActivity() {
     private var userPos: GeoPoint? = null
 
     // Coordonnees de la fac
-    val centreFac = GeoPoint(48.95713, 2.34127)
     val coordUniv = listOf(
         GeoPoint(48.96000, 2.33700),
         GeoPoint(48.96000, 2.34600),
@@ -56,8 +55,6 @@ class MainActivity : ComponentActivity() {
     //fonction qui s'execute lorsqu'on lance l'apk
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        userPos = GeoPoint(48.959599, 2.340643) //coordonnes de l'entre nord
 
         //vérification permission
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
@@ -101,7 +98,7 @@ class MainActivity : ComponentActivity() {
             val locationProvider = GpsMyLocationProvider(this)
             myLocationOverlay = MyLocationNewOverlay(locationProvider, map)
 
-            map.createOSRMRoute(salle, userPos, map)
+            map.createRoute(salle, userPos)
         }
 
         layout.addView(searchLayout, searchParams)
@@ -109,8 +106,6 @@ class MainActivity : ComponentActivity() {
 
         val polygon = Polygon(map).apply {
             points = coordUniv
-
-            //outlinePaint.color = 0x6FFF0000
             outlinePaint.strokeWidth = 0.0f
             outlinePaint.style = android.graphics.Paint.Style.STROKE
             outlinePaint.color = Color.TRANSPARENT
@@ -120,9 +115,8 @@ class MainActivity : ComponentActivity() {
         map.overlays.add(polygon)
         map.setPolygon(polygon)
 
-        map.centreFac = centreFac
         map.controller.setZoom(17.0)
-        map.controller.setCenter(centreFac)
+        map.controller.setCenter(map.centreFac)
 
         map.addMapListener (object : MapListener {
             override fun onScroll(event: ScrollEvent?): Boolean {

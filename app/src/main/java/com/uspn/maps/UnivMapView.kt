@@ -10,6 +10,7 @@ import android.os.Handler
 import android.os.Looper
 import android.graphics.Color
 import android.util.AttributeSet
+import android.util.Log
 import android.view.Gravity
 import android.view.ViewGroup
 import android.view.Window
@@ -17,20 +18,24 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
+import androidx.core.graphics.toColorInt
+import androidx.core.graphics.drawable.toDrawable
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import org.osmdroid.views.overlay.Polyline
-import java.net.URL
 
 class UnivMapView @JvmOverloads constructor (
     context : Context,
     attributes : AttributeSet? = null
 ) : MapView(context, attributes) {
 
-    var centreFac: GeoPoint? = null
+    var centreFac: GeoPoint = GeoPoint(48.95713, 2.34127)
     private var isRecentering = false
     private var currentMarker: Marker? = null
 
@@ -60,10 +65,8 @@ class UnivMapView @JvmOverloads constructor (
         return inside
     }
 
-
     fun centrage(zoomLevel : Double) {
         val centreCarte = mapCenter
-        val centre = centreFac ?: return
         val poly = polygon ?: return
 
         if (isRecentering) return
@@ -77,7 +80,7 @@ class UnivMapView @JvmOverloads constructor (
 
         if (estEnDehors) {
             isRecentering = true
-            controller.animateTo(centre, zoomLevel, 500L)
+            controller.animateTo(centreFac, zoomLevel, 500L)
             handler.postDelayed({ isRecentering = false }, 500)
         }
     }
@@ -207,7 +210,7 @@ class UnivMapView @JvmOverloads constructor (
             setTextColor(Color.WHITE)
             background = GradientDrawable().apply {
                 cornerRadius = 48f
-                setColor(Color.parseColor("#293358"))
+                setColor("#293358".toColorInt())
             }
             val params = LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.WRAP_CONTENT,
@@ -237,49 +240,40 @@ class UnivMapView @JvmOverloads constructor (
         dialog.window?.apply {
             val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
             setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
-            setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+            setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             setGravity(Gravity.CENTER)
         }
 
         dialog.show()
     }
 
-    fun createOSRMRoute(salle: Salle, locationUser: GeoPoint?, map: MapView) {
-        if(locationUser == null){
-            return
+    fun showRoute(noeud: List<GeoPoint>){
+        val ligne = Polyline().apply {
+            setPoints(noeud)
+            outlinePaint.color = Color.BLUE
+            outlinePaint.strokeWidth = 5f
         }
 
-        val url = "https://router.project-osrm.org/route/v1/foot/${locationUser?.longitude},${locationUser?.latitude};${salle.coord.longitude},${salle.coord.latitude}?overview=full&geometries=geojson"
-
-        Thread {
-            try {
-                val json = URL(url).readText()
-                val coords = JSONObject(json)
-                    .getJSONArray("routes")
-                    .getJSONObject(0)
-                    .getJSONObject("geometry")
-                    .getJSONArray("coordinates")
-
-                val roadPoints = ArrayList<GeoPoint>()
-                for (i in 0 until coords.length()) {
-                    val point = coords.getJSONArray(i)
-                    roadPoints.add(GeoPoint(point.getDouble(1), point.getDouble(0)))
-                }
-
-                map.post {
-                    val line = Polyline().apply {
-                        setPoints(roadPoints)
-                        outlinePaint.color = Color.BLUE
-                        outlinePaint.strokeWidth = 5f
-                    }
-                    map.overlays.add(line)
-                    map.invalidate()
-                }
-
-            } catch (e: Exception) {
-                e.printStackTrace()
-            }
-        }.start()
+        overlays.add(ligne)
+        invalidate()
     }
 
+    fun createRoute(salle: Salle, locationUser: GeoPoint?) {
+        val osrm = ClientOsrm()
+
+        CoroutineScope(Dispatchers.IO).launch {
+            /* coordonnées entré nord */
+            val latSrc = locationUser?.latitude ?: 48.959599
+            val lonSrc = locationUser?.longitude ?: 2.340643
+
+            val latDest = salle.coord.latitude
+            val lonDest = salle.coord.longitude
+
+            val points = osrm.getRoute(latSrc, lonSrc, latDest, lonDest)
+
+            withContext(Dispatchers.Main) {
+                showRoute(points)
+            }
+        }
+    }
 }
