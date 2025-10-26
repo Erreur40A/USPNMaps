@@ -7,12 +7,11 @@ import org.osmdroid.util.GeoPoint
 
 class ClientOsrm {
     /*mettre l'ipv4 du serveur*/
-    private val baseUrl: String = "http://[ipv4]:8000"
+    private val baseUrl: String = "[ipv4]"
     private val client = OkHttpClient()
 
     fun getRoute(latSrc: Double, lonSrc: Double, latDest: Double, lonDest: Double): List<GeoPoint>{
-        val url = "${baseUrl}/route/v1/foot/${latSrc};${lonSrc};${latDest};${lonDest}"
-
+        val url = "${baseUrl}/route/v1/foot/${lonSrc},${latSrc};${lonDest},${latDest}?overview=full&geometries=geojson"
         val requete = Request.Builder().url(url).build()
 
         client.newCall(requete).execute().use { reponse ->
