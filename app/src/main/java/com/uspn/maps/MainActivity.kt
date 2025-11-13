@@ -142,7 +142,7 @@ class MainActivity : ComponentActivity() {
         map.overlays.add(MapEventsOverlay(mapEventsReceiver))
 
         /*Commentaire à retirer si on est dans la fac*/
-        //checkGpsEnabled()
+         checkGpsEnabled()
     }
 
     override fun onDestroy() {
@@ -155,12 +155,12 @@ class MainActivity : ComponentActivity() {
         map.onResume()
 
         /*Commentaire à retirer si on est dans la fac*/
-        /*val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
         if (isGpsEnabled) {
             showUserLocation()
-        }*/
+        }
     }
 
     override fun onPause() {
@@ -183,6 +183,8 @@ class MainActivity : ComponentActivity() {
                 if (location != null) {
                     map.controller.animateTo(location)
                     map.controller.setZoom(18.0)
+                    userPos?.latitude = location.latitude
+                    userPos?.longitude = location.longitude
                 } else {
                     Log.w("MainActivity", "Première position GPS non disponible")
                 }

@@ -5,6 +5,6 @@
         <!-- remplacer par l'ip du serveur
                         OU
              localhost si on veut tester sur notre pc-->
-        <domain includeSubdomains="true">[ipv4]</domain>
+        <domain includeSubdomains="true">87.106.13.193</domain>
     </domain-config>
 </network-security-config>

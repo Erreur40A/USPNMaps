@@ -263,8 +263,9 @@ class UnivMapView @JvmOverloads constructor (
 
         CoroutineScope(Dispatchers.IO).launch {
             /* coordonnées entré nord */
-            val latSrc = locationUser?.latitude ?: 48.959599
-            val lonSrc = locationUser?.longitude ?: 2.340643
+            val latSrc = locationUser?.latitude!!
+            val lonSrc = locationUser?.longitude!!
+            Log.d("TEST", "$latSrc  $lonSrc")
 
             val latDest = salle.coord.latitude
             val lonDest = salle.coord.longitude
