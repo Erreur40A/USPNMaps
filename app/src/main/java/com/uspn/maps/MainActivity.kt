@@ -34,7 +34,9 @@ class MainActivity : ComponentActivity() {
     private lateinit var dbHelper: DatabaseHelper
     private lateinit var searchManager: SearchManager
     private lateinit var myLocationOverlay: MyLocationNewOverlay
-    private var userPos: GeoPoint? = null
+    private lateinit var localisationProvider:  GpsMyLocationProvider
+    private lateinit var localisationManager: LocationManager
+    private lateinit var userPos: GeoPoint
 
     // Coordonnees de la fac
     val coordUniv = listOf(
@@ -95,8 +97,7 @@ class MainActivity : ComponentActivity() {
             Log.d("MainActivity", "Salle choisie: ${salle.nomSalle}")
             map.showSalleMarker(salle)
 
-            val locationProvider = GpsMyLocationProvider(this)
-            myLocationOverlay = MyLocationNewOverlay(locationProvider, map)
+            myLocationOverlay = MyLocationNewOverlay(localisationProvider, map)
 
             map.createRoute(salle, userPos)
         }
@@ -141,6 +142,13 @@ class MainActivity : ComponentActivity() {
         }
         map.overlays.add(MapEventsOverlay(mapEventsReceiver))
 
+        localisationProvider = GpsMyLocationProvider(this).apply{
+            locationUpdateMinTime = 2000
+            locationUpdateMinDistance = 5f
+        }
+        localisationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        myLocationOverlay = MyLocationNewOverlay(localisationProvider, map)
+
         /*Commentaire à retirer si on est dans la fac*/
          checkGpsEnabled()
     }
@@ -155,8 +163,7 @@ class MainActivity : ComponentActivity() {
         map.onResume()
 
         /*Commentaire à retirer si on est dans la fac*/
-        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
-        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+        val isGpsEnabled = localisationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
         if (isGpsEnabled) {
             showUserLocation()
@@ -169,8 +176,6 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showUserLocation() {
-        val locationProvider = GpsMyLocationProvider(this)
-        myLocationOverlay = MyLocationNewOverlay(locationProvider, map)
         myLocationOverlay.enableMyLocation()
         myLocationOverlay.enableFollowLocation()
 
@@ -183,8 +188,7 @@ class MainActivity : ComponentActivity() {
                 if (location != null) {
                     map.controller.animateTo(location)
                     map.controller.setZoom(18.0)
-                    userPos?.latitude = location.latitude
-                    userPos?.longitude = location.longitude
+                    userPos = GeoPoint(location.latitude, location.longitude)
                 } else {
                     Log.w("MainActivity", "Première position GPS non disponible")
                 }

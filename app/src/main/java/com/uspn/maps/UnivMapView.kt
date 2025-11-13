@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.graphics.Typeface
-import android.graphics.drawable.ColorDrawable
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
@@ -41,6 +40,7 @@ class UnivMapView @JvmOverloads constructor (
 
     private val handler = Handler(Looper.getMainLooper())
     private var polygon: Polygon? = null
+    private var currentRoute: Polyline? = null
 
     fun Polygon.containsPoint(point: GeoPoint): Boolean {
         val pts = this.actualPoints
@@ -65,7 +65,7 @@ class UnivMapView @JvmOverloads constructor (
         return inside
     }
 
-    fun centrage(zoomLevel : Double) {
+    fun centrage(zoomLevel: Double) {
         val centreCarte = mapCenter
         val poly = polygon ?: return
 
@@ -239,7 +239,7 @@ class UnivMapView @JvmOverloads constructor (
         // Style de la fenêtre
         dialog.window?.apply {
             val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
-            setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+            setLayout(width, LayoutParams.WRAP_CONTENT)
             setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
             setGravity(Gravity.CENTER)
         }
@@ -247,26 +247,26 @@ class UnivMapView @JvmOverloads constructor (
         dialog.show()
     }
 
-    fun showRoute(noeud: List<GeoPoint>){
-        val ligne = Polyline().apply {
-            setPoints(noeud)
+    fun showRoute(points: List<GeoPoint>) {
+        currentRoute?.let { overlays.remove(it) }
+
+        val route = Polyline().apply {
+            setPoints(points)
             outlinePaint.color = Color.BLUE
             outlinePaint.strokeWidth = 5f
         }
 
-        overlays.add(ligne)
+        overlays.add(route)
+        currentRoute = route
         invalidate()
     }
 
-    fun createRoute(salle: Salle, locationUser: GeoPoint?) {
+    fun createRoute(salle: Salle, locationUser: GeoPoint) {
         val osrm = ClientOsrm()
 
         CoroutineScope(Dispatchers.IO).launch {
-            /* coordonnées entré nord */
-            val latSrc = locationUser?.latitude!!
-            val lonSrc = locationUser?.longitude!!
-            Log.d("TEST", "$latSrc  $lonSrc")
-
+            val latSrc = locationUser.latitude
+            val lonSrc = locationUser.longitude
             val latDest = salle.coord.latitude
             val lonDest = salle.coord.longitude
 
