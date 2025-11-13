@@ -1,10 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
-    <!-- mettre "cleartextTrafficPermitted" à false quand on aura un serveur -->
     <domain-config cleartextTrafficPermitted="true">
-        <!-- remplacer par l'ip du serveur
-                        OU
-             localhost si on veut tester sur notre pc-->
         <domain includeSubdomains="true">87.106.13.193</domain>
     </domain-config>
 </network-security-config>

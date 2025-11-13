@@ -99,7 +99,9 @@ class MainActivity : ComponentActivity() {
 
             myLocationOverlay = MyLocationNewOverlay(localisationProvider, map)
 
-            map.createRoute(salle, userPos)
+            try {
+                map.createRoute(salle, userPos)
+            } catch (_: UninitializedPropertyAccessException) { }
         }
 
         layout.addView(searchLayout, searchParams)

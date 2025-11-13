@@ -6,7 +6,6 @@ import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
 
 class ClientOsrm {
-    /*mettre l'ipv4 du serveur*/
     private val baseUrl: String = "http://87.106.13.193:5000"
     private val client = OkHttpClient()
 
