@@ -41,6 +41,7 @@ android {
 
 dependencies {
     implementation(libs.sqlliteassethelper)
+    implementation(libs.glide)
     implementation(libs.osmdroid.android)
     implementation(libs.okhttp)
     implementation(libs.coroutines.core)
@@ -54,6 +55,8 @@ dependencies {
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
     implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.recyclerview)
+    implementation(libs.androidx.viewpager2)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

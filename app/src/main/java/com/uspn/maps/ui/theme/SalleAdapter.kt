@@ -28,7 +28,8 @@ class SalleAdapter(
         val textView = convertView as? TextView ?: TextView(context)
         val salle = getItem(position)
         if (salle != null) {
-            textView.text = "${salle.nomSalle} (${salle.batiment})"
+            //TODO A AMELIORER
+            textView.text = "${salle.nom} (${salle.batiment.code})"
             textView.setPadding(16, 16, 16, 16)
         }
         return textView
@@ -49,15 +50,17 @@ class SalleAdapter(
                     salles
                 } else {
                     salles.filter { salle ->
-                        salle.nomSalle.lowercase().contains(query) ||
-                                salle.batiment.lowercase().contains(query) ||
+                        salle.nom.lowercase().contains(query) ||
+                                // TODO A REVOIR
+                               // salle.batiment.lowercase().contains(query) ||
                                 salle.description?.lowercase()?.contains(query) == true
                     }.sortedWith(compareBy(
-                        { !it.nomSalle.lowercase().startsWith(query) },
-                        { !it.nomSalle.lowercase().contains(query) },
-                        { !it.batiment.lowercase().contains(query) },
+                        { !it.nom.lowercase().startsWith(query) },
+                        { !it.nom.lowercase().contains(query) },
+                        // TODO A AMELIORER
+                        //{ !it.batiment_id.lowercase().contains(query) },
                         { !(it.description?.lowercase()?.contains(query) == true) },
-                        { it.nomSalle }))
+                        { it.nom }))
                 }
 
                 results.values = filteredList

@@ -23,6 +23,8 @@ import org.osmdroid.views.overlay.Marker
 import org.osmdroid.views.overlay.Polygon
 import androidx.core.graphics.toColorInt
 import androidx.core.graphics.drawable.toDrawable
+import androidx.viewpager2.widget.ViewPager2
+import com.uspn.maps.ui.theme.ImagePagerAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -98,8 +100,10 @@ class UnivMapView @JvmOverloads constructor (
         // Créer le nouveau marqueur
         val marker = Marker(this).apply {
             position = point
-            title = salle.nomSalle
-            subDescription = "Bâtiment : ${salle.batiment}"
+            title = salle.nom
+            // TODO A REVOID BATIMENID
+
+            subDescription = "Bâtiment : ${salle.batiment.code}"
             setAnchor(Marker.ANCHOR_CENTER, Marker.ANCHOR_BOTTOM)
             isDraggable = false
 
@@ -141,32 +145,11 @@ class UnivMapView @JvmOverloads constructor (
                 LinearLayout.LayoutParams.WRAP_CONTENT
             )
         }
-
-        // === Image de la salle ===
-        val imageView = ImageView(context).apply {
-            layoutParams = LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                400
-            ).apply {
-                bottomMargin = 24
-            }
-            scaleType = ImageView.ScaleType.CENTER_CROP
-
-            if (salle.cheminPhoto != null && salle.cheminPhoto.isNotBlank()) {
-                try {
-                    val bitmap = BitmapFactory.decodeFile(salle.cheminPhoto)
-                    setImageBitmap(bitmap)
-                } catch (e: Exception) {
-                    setImageResource(android.R.drawable.ic_menu_report_image)
-                }
-            } else {
-                setImageResource(android.R.drawable.ic_menu_report_image)
-            }
-        }
+        val imageSlider = createImageSlider(context, salle.batiment.images)
 
         // === Nom de la salle ===
         val nomView = TextView(context).apply {
-            text = salle.nomSalle
+            text = salle.nom
             textSize = 22f
             setTypeface(null, Typeface.BOLD)
             setTextColor(Color.BLACK)
@@ -179,7 +162,7 @@ class UnivMapView @JvmOverloads constructor (
         }
 
         val batimentView = TextView(context).apply {
-            text = "🏢 Bâtiment : ${salle.batiment}"
+            text = "🏢 Bâtiment : ${salle.batiment.nom}"
             textSize = 16f
             setTextColor(Color.DKGRAY)
         }
@@ -198,7 +181,7 @@ class UnivMapView @JvmOverloads constructor (
 
         // === Description ===
         val descView = TextView(context).apply {
-            text = salle.description ?: "Aucune description disponible."
+            text = if (salle.description.isNullOrEmpty()) "" else salle.description
             textSize = 15f
             setTextColor(Color.BLACK)
             setPadding(0, 16, 0, 0)
@@ -228,7 +211,7 @@ class UnivMapView @JvmOverloads constructor (
         detailsLayout.addView(composanteView)
         detailsLayout.addView(etageView)
 
-        container.addView(imageView)
+        container.addView(imageSlider)
         container.addView(nomView)
         container.addView(detailsLayout)
         container.addView(descView)
@@ -277,4 +260,64 @@ class UnivMapView @JvmOverloads constructor (
             }
         }
     }
+
+
+    fun createImageSlider(context: Context, images: List<ImageBatiment>): LinearLayout {
+        // Conteneur principal
+        val container = LinearLayout(context).apply {
+            orientation = LinearLayout.VERTICAL
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            )
+        }
+
+        // ViewPager2
+        val viewPager = ViewPager2(context).apply {
+            layoutParams = LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                400
+            ).apply { bottomMargin = 24 }
+        }
+
+        // Adapter
+        val adapterImages = if (images.isEmpty()) {
+            Log.d("EMPTY", "IMAGES")
+            listOf(ImageBatiment(0, "default-img", null, 0))
+        } else {
+            Log.d("NOT EMPTY", "IMAGES")
+            images
+        }
+        viewPager.adapter = ImagePagerAdapter(context, adapterImages)
+
+        // Flèches (si plusieurs images)
+        if (adapterImages.size > 1) {
+            val arrowsLayout = LinearLayout(context).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_HORIZONTAL
+            }
+
+            val leftArrow = ImageView(context).apply {
+                setImageResource(android.R.drawable.ic_media_previous)  // Flèche gauche système
+                setOnClickListener { viewPager.currentItem = viewPager.currentItem - 1 }
+                layoutParams = LinearLayout.LayoutParams(48, 48).apply {
+                    marginEnd = 16
+                }
+            }
+
+            val rightArrow = ImageView(context).apply {
+                setImageResource(android.R.drawable.ic_media_next)  // Flèche droite système
+                setOnClickListener { viewPager.currentItem = viewPager.currentItem + 1 }
+                layoutParams = LinearLayout.LayoutParams(48, 48)
+            }
+
+            arrowsLayout.addView(leftArrow)
+            arrowsLayout.addView(rightArrow)
+            container.addView(arrowsLayout)
+        }
+
+        container.addView(viewPager)
+        return container
+    }
+
 }

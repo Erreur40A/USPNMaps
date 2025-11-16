@@ -94,7 +94,7 @@ class MainActivity : ComponentActivity() {
         // executer lorsqu'une salle est selectionnee
         // on doit afficher le pin
         searchManager.onSalleSelected = { salle ->
-            Log.d("MainActivity", "Salle choisie: ${salle.nomSalle}")
+            Log.d("MainActivity", "Salle choisie: ${salle.batiment.code}")
             map.showSalleMarker(salle)
 
             myLocationOverlay = MyLocationNewOverlay(localisationProvider, map)
@@ -178,19 +178,22 @@ class MainActivity : ComponentActivity() {
     }
 
     private fun showUserLocation() {
-        myLocationOverlay.enableMyLocation()
-        myLocationOverlay.enableFollowLocation()
+        //myLocationOverlay.enableMyLocation()
+       // myLocationOverlay.enableFollowLocation()
 
         map.overlays.add(myLocationOverlay)
 
         myLocationOverlay.runOnFirstFix {
             runOnUiThread {
-                myLocationOverlay.enableFollowLocation()
                 val location = myLocationOverlay.myLocation
                 if (location != null) {
-                    map.controller.animateTo(location)
-                    map.controller.setZoom(18.0)
-                    userPos = GeoPoint(location.latitude, location.longitude)
+                    if (isUserInUniv(location, coordUniv)){
+                        myLocationOverlay.enableMyLocation()
+                        myLocationOverlay.enableFollowLocation()
+                        map.controller.animateTo(location)
+                        map.controller.setZoom(18.0)
+                        userPos = GeoPoint(location.latitude, location.longitude)
+                    }
                 } else {
                     Log.w("MainActivity", "Première position GPS non disponible")
                 }
@@ -223,5 +226,33 @@ class MainActivity : ComponentActivity() {
         } else {
             showUserLocation()
         }
+    }
+
+    /**
+     * Vérifie si l'utilisateur se trouve dans le périmètre de l'université
+     * Utilise l'algorithme Ray Casting (point-in-polygon)
+     */
+    private fun isUserInUniv(userPos: GeoPoint, polygon: List<GeoPoint>): Boolean {
+        if (polygon.size < 3) return false // Un polygone nécessite au moins 3 points
+
+        var inside = false
+        val n = polygon.size
+
+        for (i in polygon.indices) {
+            val j = (i + 1) % n
+
+            val xi = polygon[i].longitude
+            val yi = polygon[i].latitude
+            val xj = polygon[j].longitude
+            val yj = polygon[j].latitude
+
+            // Algorithme de Ray Casting
+            val intersect = ((yi > userPos.latitude) != (yj > userPos.latitude)) &&
+                    (userPos.longitude < (xj - xi) * (userPos.latitude - yi) / (yj - yi) + xi)
+
+            if (intersect) inside = !inside
+        }
+
+        return inside
     }
 }
