@@ -145,8 +145,8 @@ class MainActivity : ComponentActivity() {
         map.overlays.add(MapEventsOverlay(mapEventsReceiver))
 
         localisationProvider = GpsMyLocationProvider(this).apply{
-            locationUpdateMinTime = 2000
-            locationUpdateMinDistance = 5f
+            locationUpdateMinTime = 1000
+            locationUpdateMinDistance = 3f
         }
         localisationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         myLocationOverlay = MyLocationNewOverlay(localisationProvider, map)
