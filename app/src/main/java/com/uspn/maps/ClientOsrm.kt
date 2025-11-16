@@ -6,7 +6,7 @@ import org.json.JSONObject
 import org.osmdroid.util.GeoPoint
 
 class ClientOsrm {
-    private val baseUrl: String = "http://87.106.13.193:5000"
+    private val baseUrl: String = "https://api-mla.cheikyadam.me"
     private val client = OkHttpClient()
 
     fun getRoute(latSrc: Double, lonSrc: Double, latDest: Double, lonDest: Double): List<GeoPoint>{
