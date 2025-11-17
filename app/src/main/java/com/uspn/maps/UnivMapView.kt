@@ -2,12 +2,15 @@ package com.uspn.maps
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Context.CONNECTIVITY_SERVICE
 import android.graphics.BitmapFactory
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.os.Handler
 import android.os.Looper
 import android.graphics.Color
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.util.AttributeSet
 import android.util.Log
 import android.view.Gravity
@@ -17,6 +20,7 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
+import androidx.core.content.ContextCompat.getSystemService
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.Marker
@@ -244,6 +248,16 @@ class UnivMapView @JvmOverloads constructor (
         invalidate()
     }
 
+    private fun isConnected(): Boolean {
+        val cm = context.getSystemService(CONNECTIVITY_SERVICE) as ConnectivityManager
+        val network = cm.activeNetwork ?: return false
+        val caps = cm.getNetworkCapabilities(network) ?: return false
+
+        return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
+                caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
+
+    }
+
     fun createRoute(salle: Salle, locationUser: GeoPoint) {
         val osrm = ClientOsrm()
 
@@ -253,7 +267,12 @@ class UnivMapView @JvmOverloads constructor (
             val latDest = salle.coord.latitude
             val lonDest = salle.coord.longitude
 
-            val points = osrm.getRoute(latSrc, lonSrc, latDest, lonDest)
+            var points: List<GeoPoint>
+            if (isConnected()) {
+                points = osrm.getRoute(latSrc, lonSrc, latDest, lonDest)
+            } else {
+                points = emptyList()
+            }
 
             withContext(Dispatchers.Main) {
                 showRoute(points)

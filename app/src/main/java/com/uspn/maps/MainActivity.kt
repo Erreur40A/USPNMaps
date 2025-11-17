@@ -27,6 +27,9 @@ import android.content.Intent
 import android.location.LocationManager
 import android.provider.Settings
 import android.app.AlertDialog
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import android.widget.Toast
 
 class MainActivity : ComponentActivity() {
