@@ -104,7 +104,9 @@ class MainActivity : ComponentActivity() {
 
             try {
                 map.createRoute(salle, userPos)
-            } catch (_: UninitializedPropertyAccessException) { }
+            } catch (e: Exception) {
+                Log.i("ATTENTION", "user pos est null", e)
+            }
         }
 
         layout.addView(searchLayout, searchParams)
@@ -153,6 +155,7 @@ class MainActivity : ComponentActivity() {
         }
         localisationManager = getSystemService(LOCATION_SERVICE) as LocationManager
         myLocationOverlay = MyLocationNewOverlay(localisationProvider, map)
+        myLocationOverlay.enableFollowLocation()
 
         /*Commentaire à retirer si on est dans la fac*/
          checkGpsEnabled()
@@ -166,6 +169,7 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         map.onResume()
+        myLocationOverlay.enableMyLocation()
 
         /*Commentaire à retirer si on est dans la fac*/
         val isGpsEnabled = localisationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
@@ -178,12 +182,10 @@ class MainActivity : ComponentActivity() {
     override fun onPause() {
         super.onPause()
         map.onPause()
+        myLocationOverlay.disableMyLocation()
     }
 
     private fun showUserLocation() {
-        //myLocationOverlay.enableMyLocation()
-       // myLocationOverlay.enableFollowLocation()
-
         map.overlays.add(myLocationOverlay)
 
         myLocationOverlay.runOnFirstFix {
@@ -191,8 +193,6 @@ class MainActivity : ComponentActivity() {
                 val location = myLocationOverlay.myLocation
                 if (location != null) {
                     if (isUserInUniv(location, coordUniv)){
-                        myLocationOverlay.enableMyLocation()
-                        myLocationOverlay.enableFollowLocation()
                         map.controller.animateTo(location)
                         map.controller.setZoom(18.0)
                         userPos = GeoPoint(location.latitude, location.longitude)

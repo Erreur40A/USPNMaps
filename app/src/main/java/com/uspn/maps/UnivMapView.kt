@@ -255,7 +255,6 @@ class UnivMapView @JvmOverloads constructor (
 
         return caps.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) ||
                 caps.hasTransport(NetworkCapabilities.TRANSPORT_CELLULAR)
-
     }
 
     fun createRoute(salle: Salle, locationUser: GeoPoint) {
@@ -272,6 +271,7 @@ class UnivMapView @JvmOverloads constructor (
                 points = osrm.getRoute(latSrc, lonSrc, latDest, lonDest)
             } else {
                 points = emptyList()
+                Log.w("UNIVMAPVIEW", "pas de connexion")
             }
 
             withContext(Dispatchers.Main) {
