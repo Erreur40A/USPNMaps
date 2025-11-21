@@ -1,47 +1,287 @@
 package com.uspn.maps
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Bundle
+import android.util.Log
+import android.view.Gravity
+import android.widget.FrameLayout
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
-import com.uspn.maps.ui.theme.USPNMapsTheme
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import org.osmdroid.config.Configuration
+import org.osmdroid.events.ScrollEvent
+import org.osmdroid.events.ZoomEvent
+import org.osmdroid.tileprovider.tilesource.TileSourceFactory
+import org.osmdroid.util.GeoPoint
+import android.widget.TextView
+import androidx.core.net.toUri
+import org.osmdroid.events.MapListener
+import org.osmdroid.views.overlay.Polygon
+import com.uspn.maps.ui.theme.SearchManager
+import org.osmdroid.events.MapEventsReceiver
+import org.osmdroid.views.overlay.MapEventsOverlay
+import org.osmdroid.views.overlay.infowindow.InfoWindow
+import org.osmdroid.views.overlay.mylocation.GpsMyLocationProvider
+import org.osmdroid.views.overlay.mylocation.MyLocationNewOverlay
+import android.content.Intent
+import android.location.LocationManager
+import android.provider.Settings
+import android.app.AlertDialog
+import android.widget.Toast
 
 class MainActivity : ComponentActivity() {
+    private lateinit var map : UnivMapView
+    private lateinit var dbHelper: DatabaseHelper
+    private lateinit var searchManager: SearchManager
+    private lateinit var myLocationOverlay: MyLocationNewOverlay
+    private lateinit var localisationProvider:  GpsMyLocationProvider
+    private lateinit var localisationManager: LocationManager
+    private lateinit var userPos: GeoPoint
+
+    // Coordonnees de la fac
+    val coordUniv = listOf(
+        GeoPoint(48.96000, 2.33700),
+        GeoPoint(48.96000, 2.34600),
+        GeoPoint(48.95400, 2.34600),
+        GeoPoint(48.95400, 2.33700)
+    )
+
+    private val locationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            showUserLocation()
+        }
+    }
+
+
+
+    //fonction qui s'execute lorsqu'on lance l'apk
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            USPNMapsTheme {
-                Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-                    Greeting(
-                        name = "Android",
-                        modifier = Modifier.padding(innerPadding)
-                    )
+
+        //vérification permission
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+        // initialisations ici db, map, etc
+        Configuration.getInstance().load(applicationContext, getSharedPreferences("osmdroid", MODE_PRIVATE))
+
+        dbHelper = DatabaseHelper(this)
+        searchManager = SearchManager(this, dbHelper)
+
+        map = UnivMapView(this).apply {
+            setTileSource(TileSourceFactory.MAPNIK)
+            setMultiTouchControls(true)
+            minZoomLevel = 17.0
+            maxZoomLevel = 21.0
+        }
+
+        val layout = FrameLayout(this)
+        layout.addView(map, FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.MATCH_PARENT
+        ))
+
+        val osmCredit = TextView(this).apply {
+            text = context.getString(R.string.credits_openstreetmap)
+            textSize = 12f
+            setTextColor(0xFFFFFFFF.toInt())
+            setPadding(12, 8, 12, 8)
+            setBackgroundColor(0x66000000)
+            contentDescription = "Crédit : les contributeurs OpenStreetMap"
+
+            setOnClickListener {
+                val url = "https://www.openstreetmap.org/copyright"
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                context.startActivity(intent)
+            }
+        }
+
+        val creditParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.END
+            marginEnd = 16
+            bottomMargin = 16
+        }
+
+        // Ajout de la barre de recherche
+        val searchLayout = searchManager.createSearchLayout()
+        val searchParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.MATCH_PARENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.TOP
+        }
+
+        // executer lorsqu'une salle est selectionnee
+        // on doit afficher le pin
+        searchManager.onSalleSelected = { salle ->
+            Log.d("MainActivity", "Salle choisie: ${salle.batiment.code}")
+            map.showSalleMarker(salle)
+
+            myLocationOverlay = MyLocationNewOverlay(localisationProvider, map)
+
+            try {
+                map.createRoute(salle, userPos)
+            } catch (e: Exception) {
+                Log.i("ATTENTION", "user pos est null", e)
+            }
+        }
+
+        layout.addView(searchLayout, searchParams)
+        layout.addView(osmCredit, creditParams)
+        setContentView(layout)
+
+        val polygon = Polygon(map).apply {
+            points = coordUniv
+            outlinePaint.strokeWidth = 0.0f
+            outlinePaint.style = android.graphics.Paint.Style.STROKE
+            outlinePaint.color = Color.TRANSPARENT
+            fillPaint.color = Color.TRANSPARENT
+        }
+
+        map.overlays.add(polygon)
+        map.setPolygon(polygon)
+
+        map.controller.setZoom(17.0)
+        map.controller.setCenter(map.centreFac)
+
+        map.addMapListener (object : MapListener {
+            override fun onScroll(event: ScrollEvent?): Boolean {
+                map.centrage(map.zoomLevelDouble)
+                return true
+            }
+
+            override fun onZoom(event: ZoomEvent?): Boolean {
+                return true
+            }
+        })
+
+        val mapEventsReceiver = object : MapEventsReceiver {
+            override fun singleTapConfirmedHelper(p: GeoPoint?): Boolean {
+                InfoWindow.closeAllInfoWindowsOn(map)
+                return true
+            }
+
+            override fun longPressHelper(p: GeoPoint?): Boolean {
+                return true
+            }
+        }
+        map.overlays.add(MapEventsOverlay(mapEventsReceiver))
+
+        localisationProvider = GpsMyLocationProvider(this).apply{
+            locationUpdateMinTime = 1000
+            locationUpdateMinDistance = 3f
+        }
+        localisationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        myLocationOverlay = MyLocationNewOverlay(localisationProvider, map)
+        myLocationOverlay.enableFollowLocation()
+
+        /*Commentaire à retirer si on est dans la fac*/
+         checkGpsEnabled()
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        dbHelper.close()
+    }
+
+    override fun onResume() {
+        super.onResume()
+        map.onResume()
+        myLocationOverlay.enableMyLocation()
+
+        /*Commentaire à retirer si on est dans la fac*/
+        val isGpsEnabled = localisationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
+
+        if (isGpsEnabled) {
+            showUserLocation()
+        }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        map.onPause()
+        myLocationOverlay.disableMyLocation()
+    }
+
+    private fun showUserLocation() {
+        map.overlays.add(myLocationOverlay)
+
+        myLocationOverlay.runOnFirstFix {
+            runOnUiThread {
+                val location = myLocationOverlay.myLocation
+                if (location != null) {
+                    if (isUserInUniv(location, coordUniv)){
+                        map.controller.animateTo(location)
+                        map.controller.setZoom(18.0)
+                        userPos = GeoPoint(location.latitude, location.longitude)
+                    }
+                } else {
+                    Log.w("MainActivity", "Première position GPS non disponible")
                 }
             }
         }
     }
-}
 
-@Composable
-fun Greeting(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
+    private fun checkGpsEnabled() {
+        val locationManager = getSystemService(LOCATION_SERVICE) as LocationManager
+        val isGpsEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
 
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview() {
-    USPNMapsTheme {
-        Greeting("Android")
+        if (!isGpsEnabled) {
+            val builder = AlertDialog.Builder(this)
+            builder.setTitle("Activer la localisation")
+            builder.setMessage("Le GPS est désactivé. Voulez-vous l’activer pour afficher votre position ?")
+            builder.setPositiveButton("Oui") { _, _ ->
+                val intent = Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS)
+                startActivity(intent)
+            }
+            builder.setNegativeButton("Non") { dialog, _ ->
+                dialog.dismiss()
+                Toast.makeText(
+                    this,
+                    "Le GPS doit être activé pour afficher votre position.",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+            builder.setCancelable(false)
+            builder.show()
+        } else {
+            showUserLocation()
+        }
+    }
+
+    /**
+     * Vérifie si l'utilisateur se trouve dans le périmètre de l'université
+     * Utilise l'algorithme Ray Casting (point-in-polygon)
+     */
+    private fun isUserInUniv(userPos: GeoPoint, polygon: List<GeoPoint>): Boolean {
+        if (polygon.size < 3) return false // Un polygone nécessite au moins 3 points
+
+        var inside = false
+        val n = polygon.size
+
+        for (i in polygon.indices) {
+            val j = (i + 1) % n
+
+            val xi = polygon[i].longitude
+            val yi = polygon[i].latitude
+            val xj = polygon[j].longitude
+            val yj = polygon[j].latitude
+
+            // Algorithme de Ray Casting
+            val intersect = ((yi > userPos.latitude) != (yj > userPos.latitude)) &&
+                    (userPos.longitude < (xj - xi) * (userPos.latitude - yi) / (yj - yi) + xi)
+
+            if (intersect) inside = !inside
+        }
+
+        return inside
     }
 }

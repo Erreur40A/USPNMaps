@@ -1,3 +1,5 @@
+.idea/deploymentTargetSelector.xml
+.idea/deviceManager.xml
 *.iml
 .gradle
 /local.properties
