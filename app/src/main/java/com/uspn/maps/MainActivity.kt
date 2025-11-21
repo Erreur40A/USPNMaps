@@ -15,6 +15,8 @@ import org.osmdroid.events.ScrollEvent
 import org.osmdroid.events.ZoomEvent
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
 import org.osmdroid.util.GeoPoint
+import android.widget.TextView
+import androidx.core.net.toUri
 import org.osmdroid.events.MapListener
 import org.osmdroid.views.overlay.Polygon
 import com.uspn.maps.ui.theme.SearchManager
@@ -27,9 +29,6 @@ import android.content.Intent
 import android.location.LocationManager
 import android.provider.Settings
 import android.app.AlertDialog
-import android.content.Context
-import android.net.ConnectivityManager
-import android.net.NetworkCapabilities
 import android.widget.Toast
 
 class MainActivity : ComponentActivity() {
@@ -56,6 +55,8 @@ class MainActivity : ComponentActivity() {
             showUserLocation()
         }
     }
+
+
 
     //fonction qui s'execute lorsqu'on lance l'apk
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -85,6 +86,30 @@ class MainActivity : ComponentActivity() {
             FrameLayout.LayoutParams.MATCH_PARENT
         ))
 
+        val osmCredit = TextView(this).apply {
+            text = context.getString(R.string.credits_openstreetmap)
+            textSize = 12f
+            setTextColor(0xFFFFFFFF.toInt())
+            setPadding(12, 8, 12, 8)
+            setBackgroundColor(0x66000000)
+            contentDescription = "Crédit : les contributeurs OpenStreetMap"
+
+            setOnClickListener {
+                val url = "https://www.openstreetmap.org/copyright"
+                val intent = Intent(Intent.ACTION_VIEW, url.toUri())
+                context.startActivity(intent)
+            }
+        }
+
+        val creditParams = FrameLayout.LayoutParams(
+            FrameLayout.LayoutParams.WRAP_CONTENT,
+            FrameLayout.LayoutParams.WRAP_CONTENT
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.END
+            marginEnd = 16
+            bottomMargin = 16
+        }
+
         // Ajout de la barre de recherche
         val searchLayout = searchManager.createSearchLayout()
         val searchParams = FrameLayout.LayoutParams(
@@ -110,6 +135,7 @@ class MainActivity : ComponentActivity() {
         }
 
         layout.addView(searchLayout, searchParams)
+        layout.addView(osmCredit, creditParams)
         setContentView(layout)
 
         val polygon = Polygon(map).apply {
