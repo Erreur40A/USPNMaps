@@ -4,6 +4,8 @@
 
 Le site de Villetaneuse dispose de multiples infrastructures et salles (plus de 329 salles). Identifier l'un de ces lieux s'avère être une tâche pénible et compliquée. En particulier, les étudiants novices sur le campus gaspillent du temps à tenter de trouver une salle. Il existe un besoin d’une solution simple, pratique et efficace pour repérer une salle et y accéder rapidement. Par conséquent, il serait bénéfique de suggérer un outil qui simplifie leurs trajets d'où l'idée de USPN Maps.
 
+Vous pouvez visualiser le rapport complet via ce [lien](https://docs.google.com/document/d/1wRlnNy3hFy3kHQZwqkSkCZ1Y3zaiqJNY0q4SOw7fK20/edit?usp=sharing)
+
 
 ## Objectifs de l’application
 
