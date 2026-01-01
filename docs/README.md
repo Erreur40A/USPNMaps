@@ -20,3 +20,6 @@ L'application a été développée en Kotlin. La base de données SQLite est int
 Les données ont été extraites et nettoyées grâce à des scripts Python.
 
 ## Demo
+
+https://github.com/user-attachments/assets/82cbfbeb-f922-42ac-9ad2-0fd69f49de1f
+
